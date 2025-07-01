@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html><head>
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="stomp.js"></script>
+  <script src="stomp_wt.js"></script>
   <style>
       .box {
           width: 440px;
@@ -79,10 +79,12 @@
         };
 
       // Stomp.js boilerplate
-      var client = Stomp.client('ws://' + window.location.hostname + ':15674/ws');
+      //var client = Stomp.client('ws://' + window.location.hostname + ':15674/wt');
+      var client = Stomp.client('https://' + window.location.hostname + ':15675/wt');
       client.debug = pipe('#second');
 
       var print_first = pipe('#first', function(data) {
+          console.log(typeof data);
           client.send('/topic/test', {"content-type":"text/plain"}, data);
       });
       var on_connect = function(x) {

@@ -40,8 +40,8 @@ endif
 # all projects use the same versions. It avoids conflicts.
 
 dep_accept = hex 0.3.5
-dep_cowboy = hex 2.13.0
-dep_cowlib = hex 2.14.0
+dep_cowboy = git https://github.com/ninenines/cowboy webtransport
+dep_cowlib = git https://github.com/ninenines/cowlib webtransport
 dep_credentials_obfuscation = hex 3.5.0
 dep_cuttlefish = hex 3.4.0
 dep_gen_batch_server = hex 0.8.8

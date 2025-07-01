@@ -5,7 +5,10 @@ PROJECT_MOD = rabbit_web_stomp_app
 define PROJECT_ENV
 [
 	    {tcp_config, [{port, 15674}]},
-	    {ssl_config, []},
+	    {ssl_config, [{port, 15675},
+            {certfile, "/home/essen/ninenines/cowboy/test/rfc9114_SUITE_data/server.pem"},
+            {keyfile, "/home/essen/ninenines/cowboy/test/rfc9114_SUITE_data/server.key"}
+        ]},
 	    {num_tcp_acceptors, 10},
 	    {num_ssl_acceptors, 10},
 	    {cowboy_opts, []},

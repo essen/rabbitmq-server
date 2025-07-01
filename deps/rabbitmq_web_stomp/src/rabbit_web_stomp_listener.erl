@@ -21,6 +21,7 @@
 
 -define(TCP_PROTOCOL, 'http/web-stomp').
 -define(TLS_PROTOCOL, 'https/web-stomp').
+-define(H3_PROTOCOL, 'h3/web-stomp').
 
 %%
 %% API
@@ -35,7 +36,9 @@ init() ->
     CowboyWsOpts = maps:from_list(get_env(cowboy_ws_opts, [])),
 
     VhostRoutes = [
-        {get_env(ws_path, "/ws"), rabbit_web_stomp_handler, [{type, WsFrame}, {ws_opts, CowboyWsOpts}]}
+        {get_env(ws_path, "/ws"), rabbit_web_stomp_handler, [{type, WsFrame}, {ws_opts, CowboyWsOpts}]},
+        %% @todo The handler will need to error out if not H3.
+        {get_env(ws_path, "/wt"), rabbit_web_stomp_wt_handler, []}
     ],
     Routes = cowboy_router:compile([{'_',  VhostRoutes}]), % any vhost
 
@@ -45,7 +48,8 @@ init() ->
     end,
     case get_env(ssl_config, []) of
         []       -> ok;
-        TLSConf0 -> start_tls_listener(TLSConf0, CowboyOpts, Routes)
+        TLSConf0 -> start_tls_listener(TLSConf0, CowboyOpts, Routes),
+                    start_quic_listener(TLSConf0, CowboyOpts, Routes)
     end,
     ok.
 
@@ -159,6 +163,25 @@ start_tls_listener(TLSConf0, CowboyOpts0, Routes) ->
   listener_started(?TLS_PROTOCOL, TLSConf),
   rabbit_log_connection:info(
       "rabbit_web_stomp: listening for HTTPS connections on ~ts:~w",
+      [get_binding_address(TLSConf), TLSPort]).
+
+start_quic_listener(TLSConf0, _CowboyOpts, Routes) ->
+    TLSPort = proplists:get_value(port, TLSConf0),
+    TLSConf = maybe_parse_ip(TLSConf0),
+  rabbit_log_connection:info("TLS CONFIG ~p", [TLSConf]),
+    TransOpts = #{
+        socket_opts => TLSConf
+    },
+    {ok, Listener} = cowboy:start_quic(?H3_PROTOCOL, TransOpts, #{
+        enable_connect_protocol => true,
+        h3_datagram => true,
+        enable_webtransport => true, %% For compatibility with draft-02.
+        webtransport_max_sessions => 10,
+        env => #{dispatch => Routes}
+    }),
+  listener_started(?H3_PROTOCOL, TLSConf),
+  rabbit_log_connection:info(
+      "rabbit_web_stomp: listening for HTTP/3 connections on ~ts:~w",
       [get_binding_address(TLSConf), TLSPort]).
 
 listener_started(Protocol, Listener) ->

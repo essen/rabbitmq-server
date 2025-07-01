@@ -8,7 +8,7 @@ define PROJECT_ENV
 	  ]
 endef
 
-DEPS = rabbit_common rabbit rabbitmq_web_dispatch rabbitmq_web_stomp
+DEPS = rabbit_common rabbit rabbitmq_web_dispatch rabbitmq_web_stomp quicer
 
 DEP_EARLY_PLUGINS = rabbit_common/mk/rabbitmq-early-plugin.mk
 DEP_PLUGINS = rabbit_common/mk/rabbitmq-plugin.mk
